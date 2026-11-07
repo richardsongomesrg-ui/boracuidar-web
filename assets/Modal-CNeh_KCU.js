@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-BgMs7Gb-.js";var t=e();function n({isOpen:e,onClose:n,children:r,maxWidth:i=760}){return e?(0,t.jsx)(`div`,{className:`modal-backdrop`,onClick:n,children:(0,t.jsx)(`div`,{className:`modal-card`,style:{maxWidth:i},onClick:e=>e.stopPropagation(),children:r})}):null}export{n as t};

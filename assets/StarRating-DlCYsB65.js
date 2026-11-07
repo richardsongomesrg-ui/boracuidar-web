@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-BgMs7Gb-.js";import{t}from"./star-Dg7XvBPh.js";var n=e();function r({value:e=0,size:r=16}){return(0,n.jsx)(`span`,{className:`stars`,"aria-label":`Avaliação ${e.toFixed(1)} de 5`,children:Array.from({length:5}).map((i,a)=>(0,n.jsx)(t,{size:r,className:a<Math.round(e)?`star-filled`:`star-empty`},a))})}export{r as t};

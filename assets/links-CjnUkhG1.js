@@ -1,0 +1,1 @@
+function e(e){let t=new URLSearchParams;return e&&t.set(`categoria`,e),t.set(`origem`,`rotina`),`/marketplace?${t.toString()}`}function t(t){return e(t?.category)}export{t as n,e as t};

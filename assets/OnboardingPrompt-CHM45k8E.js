@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-BgMs7Gb-.js";import{n as t}from"./index-DW0o5H96.js";var n=e();function r({title:e,text:r}){return(0,n.jsxs)(`section`,{className:`onboarding-prompt`,children:[(0,n.jsx)(`h2`,{children:e}),(0,n.jsx)(`p`,{children:r}),(0,n.jsx)(t,{to:`/`,className:`cta-btn`,children:`Fazer meu Raio-X`})]})}export{r as t};
