@@ -1,4 +1,5 @@
-﻿import { Link } from "react-router-dom";
+﻿import { Link, NavLink } from "react-router-dom";
+import { ListChecks } from "lucide-react";
 import BrandLogo from "../common/BrandLogo";
 
 export default function MarketplaceLayout({ children, hideTopbar = false, fullWidth = false, heroTopbar = false, hideFooter = false }) {
@@ -11,6 +12,9 @@ export default function MarketplaceLayout({ children, hideTopbar = false, fullWi
               <BrandLogo />
             </Link>
             <nav className="topbar-actions" aria-label="Navegação principal">
+              <NavLink className="about-btn topbar-rotina" to="/minha-rotina">
+                <ListChecks size={16} aria-hidden="true" /> Minha rotina
+              </NavLink>
               <Link className="about-btn topbar-link-schedules" to="/marketplace/meus-agendamentos">
                 Meus agendamentos
               </Link>
@@ -33,6 +37,7 @@ export default function MarketplaceLayout({ children, hideTopbar = false, fullWi
             </div>
             <div className="app-footer-links">
               <Link to="/marketplace">Explorar</Link>
+              <Link to="/minha-rotina">Minha rotina</Link>
               <Link to="/marketplace/meus-agendamentos">Meus agendamentos</Link>
               <a href="https://business.boracuidar.app">Para negócios</a>
             </div>

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { CheckCircle2, ExternalLink } from "lucide-react";
 import { queryRows } from "../../lib/firestore";
-import { digitsOnly, firstText, formatDate, formatMoney } from "../../lib/marketplace";
+import { digitsOnly, firstText, formatDate, formatMoney, typeLabel } from "../../lib/marketplace";
+import RotinaBookingNote from "../rotina/RotinaBookingNote";
 import { measureAsync } from "../../lib/observability";
 
 function buildInitialPayload(agendamentoId, initialPayload) {
@@ -151,6 +152,14 @@ export default function BookingConfirmationCard({ agendamentoId, onBack, initial
           <dd>{formatMoney(totalPrice ?? (service.preco || 0))}</dd>
         </div>
       </dl>
+
+      <RotinaBookingNote
+        agendamentoId={schedule.id ?? agendamentoId}
+        serviceName={service.nome}
+        businessName={business.nome}
+        businessCategory={typeLabel(business.business_type)}
+        dateValue={schedule.data_agendamento}
+      />
 
       <footer>
         <button className="ghost-btn" onClick={onBack}>Voltar ao estabelecimento</button>

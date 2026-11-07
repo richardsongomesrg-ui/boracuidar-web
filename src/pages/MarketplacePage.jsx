@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CalendarCheck, ChevronLeft, ChevronRight, MapPin, Search, ShieldCheck, Star } from "lucide-react";
-import { Link } from "react-router-dom";
+import { CalendarCheck, Check, ChevronLeft, ChevronRight, MapPin, Search, ShieldCheck, Star } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
 import MarketplaceLayout from "../components/layout/MarketplaceLayout";
 import { queryCollectionGroupRows, queryRows } from "../lib/firestore";
 import {
@@ -38,11 +38,14 @@ export default function MarketplacePage() {
 
   const [searchService, setSearchService] = useState("");
   const [searchWhere, setSearchWhere] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("Todos");
+  const [searchParams] = useSearchParams();
+  const initialCategory = searchParams.get("categoria") || "Todos";
+  const fromRotina = searchParams.get("origem") === "rotina";
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [appliedFilters, setAppliedFilters] = useState({
     service: "",
     where: "",
-    category: "Todos",
+    category: initialCategory,
   });
 
   const carouselRef = useRef(null);
@@ -158,10 +161,16 @@ export default function MarketplacePage() {
   }, [businesses]);
   const heroCategories = useMemo(() => {
     const fastOptions = ["Todos", ...categories.filter((item) => item !== "Todos")];
+    if (initialCategory !== "Todos" && !fastOptions.includes(initialCategory)) fastOptions.splice(1, 0, initialCategory);
     return fastOptions.slice(0, 9);
-  }, [categories]);
+  }, [categories, initialCategory]);
 
   const featuredBusinesses = useMemo(() => businesses.filter((item) => item.featured), [businesses]);
+
+  useEffect(() => {
+    if (loading || !fromRotina || initialCategory === "Todos") return;
+    requestAnimationFrame(() => filteredCardsRef.current?.scrollIntoView({ block: "start" }));
+  }, [loading, initialCategory, fromRotina]);
 
   const filteredBusinesses = useMemo(() => {
     const serviceQuery = appliedFilters.service.trim().toLowerCase();
@@ -363,7 +372,25 @@ export default function MarketplacePage() {
             </div>
 
             {filteredBusinesses.length === 0 ? (
-              <p className="section-message">Nenhum estabelecimento encontrado para os filtros informados.</p>
+              <div className="section-message">
+                <p>
+                  {appliedFilters.category !== "Todos"
+                    ? `Ainda não temos ${appliedFilters.category.toLowerCase()} disponível por aqui.`
+                    : "Nenhum estabelecimento encontrado para os filtros informados."}
+                </p>
+                {appliedFilters.category !== "Todos" ? (
+                  <button
+                    type="button"
+                    className="ghost-btn"
+                    onClick={() => {
+                      setSelectedCategory("Todos");
+                      setAppliedFilters((prev) => ({ ...prev, category: "Todos" }));
+                    }}
+                  >
+                    Ver todos os estabelecimentos
+                  </button>
+                ) : null}
+              </div>
             ) : (
               <div className="market-cards-grid">
                 {filteredBusinesses.map((item) => (
@@ -378,6 +405,20 @@ export default function MarketplacePage() {
 
         {!loading && !error ? (
           <>
+            <section className="market-rotina-cta">
+              <div className="market-rotina-cta-text">
+                <p className="market-eyebrow">Novo · Minha rotina</p>
+                <h2>Água, treino, sono e o dentista que você vive adiando.</h2>
+                <p>Faça um Raio-X do seu autocuidado e receba lembretes do que importa pra você, na hora certa.</p>
+                <Link to="/minha-rotina" className="cta-btn">Montar minha rotina</Link>
+              </div>
+              <ul className="market-rotina-cta-preview" aria-hidden="true">
+                <li><span className="habit-check on"><Check size={14} /></span> Beber água <small>6 de 8 copos</small></li>
+                <li><span className="habit-check on"><Check size={14} /></span> Treinar <small>2 de 3 na semana</small></li>
+                <li><span className="habit-check" /> Revisão no dentista <small className="status-text due">Vence em 8 dias</small></li>
+              </ul>
+            </section>
+
             <section className="market-how-it-works">
               <h2>Como funciona</h2>
               <div className="market-how-grid">
