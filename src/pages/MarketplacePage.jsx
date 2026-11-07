@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CalendarCheck, Check, ChevronLeft, ChevronRight, MapPin, Search, ShieldCheck, Star } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, Search, Star } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
+import { useRotina } from "../lib/rotina/store";
+import { cycleStatus } from "../lib/rotina/engine";
 import MarketplaceLayout from "../components/layout/MarketplaceLayout";
 import { queryCollectionGroupRows, queryRows } from "../lib/firestore";
 import {
@@ -39,6 +41,11 @@ export default function MarketplacePage() {
   const [searchService, setSearchService] = useState("");
   const [searchWhere, setSearchWhere] = useState("");
   const [searchParams] = useSearchParams();
+  const rotina = useRotina();
+  const rotinaDue = (rotina.cycles ?? [])
+    .map((cycle) => ({ cycle, status: cycleStatus(cycle) }))
+    .filter(({ cycle, status }) => cycle.category && ["late", "due"].includes(status.tone))
+    .slice(0, 4);
   const initialCategory = searchParams.get("categoria") || "Todos";
   const fromRotina = searchParams.get("origem") === "rotina";
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
@@ -193,23 +200,6 @@ export default function MarketplacePage() {
     });
   }, [businesses, appliedFilters]);
 
-  const stats = useMemo(() => {
-    const servicesTotal = businesses.reduce((sum, item) => sum + item.servicesCount, 0);
-    const reviewed = businesses.filter((item) => item.reviewsCount > 0);
-    const reviewsTotal = reviewed.reduce((sum, item) => sum + item.reviewsCount, 0);
-    const weightedStars = reviewed.reduce((sum, item) => sum + item.rating * item.reviewsCount, 0);
-    const averageRating = reviewsTotal > 0 ? weightedStars / reviewsTotal : null;
-    const prices = businesses.map((item) => item.startingPrice).filter((value) => value > 0);
-    const minPrice = prices.length > 0 ? Math.min(...prices) : null;
-
-    return {
-      businessesTotal: businesses.length,
-      servicesTotal,
-      averageRating,
-      minPrice,
-    };
-  }, [businesses]);
-
   function moveCarousel(direction) {
     const container = carouselRef.current;
     if (!container) return;
@@ -268,7 +258,7 @@ export default function MarketplacePage() {
   }
 
   return (
-    <MarketplaceLayout fullWidth heroTopbar>
+    <MarketplaceLayout fullWidth heroTopbar showFooter>
       <section className="market-search-hero">
         <div className="market-hero-inner">
           <div className="market-headline">
@@ -327,6 +317,29 @@ export default function MarketplacePage() {
             </button>
           ))}
         </div>
+
+        {rotinaDue.length > 0 ? (
+          <section className="explore-rotina-strip" aria-label="Da sua rotina">
+            <p className="explore-rotina-title">Da sua rotina</p>
+            <div className="explore-rotina-items">
+              {rotinaDue.map(({ cycle, status }) => (
+                <button
+                  key={cycle.id}
+                  type="button"
+                  className={appliedFilters.category === cycle.category ? "explore-rotina-item active" : "explore-rotina-item"}
+                  onClick={() => {
+                    setSelectedCategory(cycle.category);
+                    setAppliedFilters((prev) => ({ ...prev, category: cycle.category }));
+                    requestAnimationFrame(() => filteredCardsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+                  }}
+                >
+                  <strong>{cycle.label}</strong>
+                  <small className={`status-text ${status.tone}`}>{status.label}</small>
+                </button>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         {loading ? <p className="section-message">Carregando estabelecimentos...</p> : null}
         {error ? <p className="error-text section-message">{error}</p> : null}
@@ -405,62 +418,6 @@ export default function MarketplacePage() {
 
         {!loading && !error ? (
           <>
-            <section className="market-rotina-cta">
-              <div className="market-rotina-cta-text">
-                <p className="market-eyebrow">Novo · Minha rotina</p>
-                <h2>Água, treino, sono e o dentista que você vive adiando.</h2>
-                <p>Faça um Raio-X do seu autocuidado e receba lembretes do que importa pra você, na hora certa.</p>
-                <Link to="/minha-rotina" className="cta-btn">Montar minha rotina</Link>
-              </div>
-              <ul className="market-rotina-cta-preview" aria-hidden="true">
-                <li><span className="habit-check on"><Check size={14} /></span> Beber água <small>6 de 8 copos</small></li>
-                <li><span className="habit-check on"><Check size={14} /></span> Treinar <small>2 de 3 na semana</small></li>
-                <li><span className="habit-check" /> Revisão no dentista <small className="status-text due">Vence em 8 dias</small></li>
-              </ul>
-            </section>
-
-            <section className="market-how-it-works">
-              <h2>Como funciona</h2>
-              <div className="market-how-grid">
-                <article className="market-how-card">
-                  <span className="market-how-icon"><Search size={18} /></span>
-                  <h3>Busque</h3>
-                  <p>Procure pelo serviço, pelo nome do lugar ou pela sua região.</p>
-                </article>
-                <article className="market-how-card">
-                  <span className="market-how-icon"><ShieldCheck size={18} /></span>
-                  <h3>Compare</h3>
-                  <p>Veja fotos, preços, avaliações e a equipe antes de decidir.</p>
-                </article>
-                <article className="market-how-card">
-                  <span className="market-how-icon"><CalendarCheck size={18} /></span>
-                  <h3>Agende</h3>
-                  <p>Escolha o horário e receba a confirmação direto no WhatsApp.</p>
-                </article>
-              </div>
-            </section>
-
-            <section className="market-curiosities" aria-label="BoraCuidar em números">
-              <div className="market-curiosities-grid">
-                <article className="market-stat-card">
-                  <strong>{stats.businessesTotal}</strong>
-                  <p>Estabelecimentos</p>
-                </article>
-                <article className="market-stat-card">
-                  <strong>{stats.servicesTotal}</strong>
-                  <p>Serviços para agendar</p>
-                </article>
-                <article className="market-stat-card">
-                  <strong>{stats.averageRating ? stats.averageRating.toFixed(1).replace(".", ",") : "--"}</strong>
-                  <p>Avaliação média</p>
-                </article>
-                <article className="market-stat-card">
-                  <strong>{stats.minPrice ? formatMoney(stats.minPrice) : "--"}</strong>
-                  <p>Preços a partir de</p>
-                </article>
-              </div>
-            </section>
-
             <section className="market-business-cta">
               <div>
                 <p className="market-eyebrow">Para negócios</p>

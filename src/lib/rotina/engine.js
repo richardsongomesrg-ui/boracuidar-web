@@ -236,3 +236,42 @@ export function unlockedAchievements(state, todayKey = dateKey()) {
 
   return ACHIEVEMENTS.map((a) => ({ ...a, unlocked: unlocked.has(a.id) }));
 }
+
+/* ---------- desafios ---------- */
+
+export function challengeProgress(state, challenge, start, todayKey = dateKey()) {
+  let done = 0;
+  for (let k = start; k <= todayKey; k = addDays(k, 1)) {
+    const hit = challenge.habits.some((id) => {
+      const habit = (state.habits ?? []).find((h) => h.id === id);
+      const value = habitValue(state, id, k);
+      return habit ? habitDone({ ...habit, period: "day" }, value) : value >= 1;
+    });
+    if (hit) done += 1;
+  }
+  return { done: Math.min(done, challenge.days), total: challenge.days, complete: done >= challenge.days };
+}
+
+/* ---------- humor ---------- */
+
+export function moodSeries(state, days = 30, todayKey = dateKey()) {
+  return Array.from({ length: days }, (_, i) => {
+    const key = addDays(todayKey, -(days - 1 - i));
+    return { key, score: state.moods?.[key]?.score ?? null };
+  });
+}
+
+// Humor baixo (1 ou 2) em pelo menos 4 dos últimos 7 registros.
+export function lowMoodStretch(state, todayKey = dateKey()) {
+  const recent = moodSeries(state, 10, todayKey).filter((d) => d.score != null).slice(-7);
+  if (recent.length < 4) return false;
+  return recent.filter((d) => d.score <= 2).length >= 4;
+}
+
+/* ---------- agenda ---------- */
+
+export function upcomingBookings(state, todayKey = dateKey()) {
+  return (state.history ?? [])
+    .filter((h) => h.source === "boracuidar" && h.date >= todayKey)
+    .sort((a, b) => (a.date < b.date ? -1 : 1));
+}

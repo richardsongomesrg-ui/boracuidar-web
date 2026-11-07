@@ -247,7 +247,7 @@ export default function MarketplaceBusinessPage({ businessId: providedBusinessId
 
   if (loading) {
     return (
-      <MarketplaceLayout fullWidth>
+      <MarketplaceLayout fullWidth showFooter hideTabBar>
         <p className="section-message">Carregando estabelecimento...</p>
       </MarketplaceLayout>
     );
@@ -255,7 +255,7 @@ export default function MarketplaceBusinessPage({ businessId: providedBusinessId
 
   if (error || !business) {
     return (
-      <MarketplaceLayout fullWidth>
+      <MarketplaceLayout fullWidth showFooter hideTabBar>
         <div className="section-message">
           <p className="error-text">{error || "Não foi possível carregar este estabelecimento."}</p>
           <Link className="ghost-btn" to="/marketplace">
@@ -289,7 +289,7 @@ export default function MarketplaceBusinessPage({ businessId: providedBusinessId
   const ratingLabel = reviewSummary.count > 0 ? reviewSummary.average.toFixed(1).replace(".", ",") : null;
 
   return (
-    <MarketplaceLayout fullWidth>
+    <MarketplaceLayout fullWidth showFooter hideTabBar>
       <section className="business-profile-wrap">
         <Link className="market-back-link" to="/marketplace">
           <ChevronLeft size={16} /> Explorar

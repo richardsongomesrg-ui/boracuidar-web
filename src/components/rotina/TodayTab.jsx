@@ -1,23 +1,30 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Check, Lightbulb, Minus, Plus, Settings2, Trash2, X } from "lucide-react";
-import { HABIT_CATALOG, dimensionById } from "../../lib/rotina/catalog";
+import { CalendarDays, Check, ChevronRight, Lightbulb, Megaphone, Minus, Plus, Settings2, Trash2, Wind, X } from "lucide-react";
+import { HABIT_CATALOG, cycleById, dimensionById } from "../../lib/rotina/catalog";
+import { CAMPAIGNS, articleBySlug, challengeById } from "../../lib/rotina/content";
 import {
+  challengeProgress,
+  cycleStatus,
   dateKey,
   dayProgress,
   formatDayLong,
   habitDone,
   habitValue,
   habitWeekProgress,
+  lowMoodStretch,
   parseKey,
   sortCyclesByAttention,
-  cycleStatus,
   tipOfDay,
+  upcomingBookings,
   weekDays,
 } from "../../lib/rotina/engine";
 import { addCustomHabit, addHabit, markCycleDone, removeHabit, setHabitValue } from "../../lib/rotina/store";
+import BreathingDialog from "./BreathingDialog";
+import HelpCard from "./HelpCard";
+import MoodCheckin from "./MoodCheckin";
 import { DimensionIcon, HabitIcon } from "./RotinaIcon";
-import { marketplaceLinkForCycle } from "./links";
+import { marketplaceLinkForCategory, marketplaceLinkForCycle } from "./links";
 
 const WEEKDAY_SHORT = ["D", "S", "T", "Q", "Q", "S", "S"];
 
@@ -120,20 +127,50 @@ function HabitEditor({ state, onClose }) {
   );
 }
 
-export default function TodayTab({ state, onOpenCuidados }) {
+export default function TodayTab({ state }) {
   const today = dateKey();
   const [dayKey, setDayKey] = useState(today);
   const [editing, setEditing] = useState(false);
+  const [breathing, setBreathing] = useState(false);
   const days = weekDays(today);
   const attention = sortCyclesByAttention(state.cycles, today)
     .filter((c) => !["ok", "scheduled"].includes(cycleStatus(c, today).tone))
     .slice(0, 3);
   const tip = tipOfDay(state.raiox?.priorities ?? [], today);
   const tipDim = dimensionById(tip.dim);
+  const campaign = CAMPAIGNS[parseKey(today).getMonth() + 1];
+  const lowMood = lowMoodStretch(state, today);
+
+  const seen = new Set();
+  const upcoming = upcomingBookings(state, today).filter((h) => {
+    const key = h.bookingId ?? h.id;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  const activeChallenges = (state.challenges ?? [])
+    .map((c) => ({ ...c, def: challengeById(c.id) }))
+    .filter((c) => c.def)
+    .map((c) => ({ ...c, progress: challengeProgress(state, c.def, c.start, today) }));
 
   return (
     <div className="rotina-today">
       <div className="rotina-today-main">
+        {lowMood ? (
+          <section className="support-card">
+            <h3>Os últimos dias foram pesados</h3>
+            <p>Você marcou um humor mais baixo em vários dias. Conversar com alguém de confiança ou com um profissional costuma ajudar.</p>
+            <div className="support-actions">
+              <button type="button" className="ghost-btn small" onClick={() => setBreathing(true)}><Wind size={15} /> Respirar agora</button>
+              <Link className="ghost-btn small" to="/aprender/trilha/primeira-terapia">Como começar a terapia</Link>
+            </div>
+            <HelpCard tone="inline" />
+          </section>
+        ) : null}
+
+        <MoodCheckin key={dayKey} state={state} dayKey={dayKey} />
+
         <div className="rotina-week-strip" role="tablist" aria-label="Dias da semana">
           {days.map((key) => {
             const progress = dayProgress(state, key);
@@ -159,7 +196,7 @@ export default function TodayTab({ state, onOpenCuidados }) {
         </div>
 
         <div className="rotina-section-head">
-          <h2>{dayKey === today ? "Hoje" : formatDayLong(dayKey)}</h2>
+          <h2>{dayKey === today ? "Sua rotina de hoje" : formatDayLong(dayKey)}</h2>
           <button type="button" className="icon-text-btn" onClick={() => setEditing((v) => !v)} aria-expanded={editing}>
             <Settings2 size={15} /> Editar
           </button>
@@ -176,13 +213,35 @@ export default function TodayTab({ state, onOpenCuidados }) {
             ))}
           </ul>
         )}
+
+        <div className="quick-actions">
+          <button type="button" className="quick-action" onClick={() => setBreathing(true)}>
+            <span className="habit-icon"><Wind size={18} /></span>
+            <span><strong>Respirar 3 minutos</strong><small>Uma pausa guiada pra desacelerar</small></span>
+            <ChevronRight size={18} aria-hidden="true" />
+          </button>
+          <Link className="quick-action" to="/aprender">
+            <span className="habit-icon"><Lightbulb size={18} /></span>
+            <span><strong>Trilhas e desafios</strong><small>Passo a passo pra criar um hábito novo</small></span>
+            <ChevronRight size={18} aria-hidden="true" />
+          </Link>
+        </div>
       </div>
 
       <aside className="rotina-today-side">
+        {upcoming.length > 0 ? (
+          <section className="rotina-panel upcoming-card">
+            <p className="rotina-panel-label"><CalendarDays size={14} /> Próximo agendamento</p>
+            <strong>{upcoming[0].detail || cycleById(upcoming[0].cycleId)?.label}</strong>
+            <span className="upcoming-date">{upcoming[0].date === today ? "Hoje" : formatDayLong(upcoming[0].date)}</span>
+            <Link className="icon-text-btn" to="/marketplace/meus-agendamentos">Ver meus agendamentos</Link>
+          </section>
+        ) : null}
+
         <section className="rotina-panel">
           <div className="rotina-panel-head">
             <h3>Pra ficar de olho</h3>
-            <button type="button" className="icon-text-btn" onClick={onOpenCuidados}>Ver todos</button>
+            <Link className="icon-text-btn" to="/cuidados">Ver todos</Link>
           </div>
           {attention.length === 0 ? (
             <p className="muted">Tudo em dia por aqui. A gente avisa quando chegar a hora do próximo cuidado.</p>
@@ -208,12 +267,48 @@ export default function TodayTab({ state, onOpenCuidados }) {
           )}
         </section>
 
+        {activeChallenges.length > 0 ? (
+          <section className="rotina-panel">
+            <div className="rotina-panel-head">
+              <h3>Seus desafios</h3>
+              <Link className="icon-text-btn" to="/aprender#desafios">Ver mais</Link>
+            </div>
+            {activeChallenges.map((c) => (
+              <div key={c.id} className="challenge-mini">
+                <div>
+                  <strong>{c.def.label}</strong>
+                  <small>{c.progress.complete ? "Concluído" : `${c.progress.done} de ${c.progress.total} dias`}</small>
+                </div>
+                <span className="cycle-bar"><i style={{ width: `${(c.progress.done / c.progress.total) * 100}%` }} /></span>
+              </div>
+            ))}
+          </section>
+        ) : null}
+
+        {campaign ? (
+          <Link className="rotina-panel campaign-card" to={`/aprender/artigo/${campaign.article}`}>
+            <p className="rotina-panel-label"><Megaphone size={14} /> {campaign.title}</p>
+            <p className="campaign-text">{campaign.text}</p>
+            <span className="icon-text-btn">Ler: {articleBySlug(campaign.article)?.title}</span>
+          </Link>
+        ) : null}
+
         <section className="rotina-panel rotina-tip">
           <p className="rotina-tip-label"><Lightbulb size={15} /> Dica do dia · {tipDim?.label}</p>
           <p className="rotina-tip-text">{tip.text}</p>
           <p className="rotina-tip-note">Dica geral. Não substitui a orientação de um profissional.</p>
         </section>
+
+        {state.cycles.some((c) => c.id === "terapia") || (state.raiox?.priorities ?? []).includes("mente") ? (
+          <Link className="rotina-panel explore-link" to={marketplaceLinkForCategory("Clínica")}>
+            <span><strong>Cuidar da mente</strong><small>Psicólogos perto de você</small></span>
+            <ChevronRight size={18} aria-hidden="true" />
+          </Link>
+        ) : null}
+
       </aside>
+
+      <BreathingDialog isOpen={breathing} onClose={() => setBreathing(false)} />
     </div>
   );
 }

@@ -73,8 +73,7 @@ export default function CuidadosTab({ state }) {
     <div className="rotina-cuidados">
       <div className="rotina-section-head">
         <div>
-          <h2>Cuidados de tempos em tempos</h2>
-          <p className="muted">
+          <p className="cuidados-summary">
             {cycles.length === 0
               ? "Adicione os cuidados que você quer acompanhar."
               : late > 0

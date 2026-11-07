@@ -24,7 +24,7 @@ export default function RotinaBookingNote({ agendamentoId, serviceName, business
           <strong>{labels} {cycles.length > 1 ? "registrados" : "registrado"} na sua rotina.</strong> Depois do atendimento,
           a gente te lembra do próximo em {formatInterval(saved?.intervalDays ?? first.intervalDays)}.
         </p>
-        <Link to="/minha-rotina?aba=cuidados" className="icon-text-btn">Ver</Link>
+        <Link to="/cuidados" className="icon-text-btn">Ver</Link>
       </div>
     );
   }
@@ -35,7 +35,7 @@ export default function RotinaBookingNote({ agendamentoId, serviceName, business
       <p>
         <strong>Quer lembrar do próximo?</strong> Monte sua rotina de autocuidado e a gente avisa quando chegar a hora.
       </p>
-      <Link to="/minha-rotina" className="icon-text-btn">Montar</Link>
+      <Link to="/" className="icon-text-btn">Montar</Link>
     </div>
   );
 }

@@ -17,6 +17,12 @@ const EMPTY = Object.freeze({
   cycles: [],
   logs: {},
   history: [],
+  profile: { name: "" },
+  moods: {},
+  challenges: [],
+  trails: {},
+  readArticles: [],
+  settings: { reminderTime: "08:00", eveningTime: "21:00", whatsapp: false, quietWeekend: false },
 });
 
 const rotinaRepository = {
@@ -81,10 +87,11 @@ export function getRotina() {
 
 /* ---------- ações ---------- */
 
-export function completeOnboarding({ scores, priorities, habits, cycles }) {
+export function completeOnboarding({ name = "", scores, priorities, habits, cycles }) {
   const today = dateKey();
   update((s) => ({
     ...s,
+    profile: { ...(s.profile ?? {}), name: String(name).trim() },
     onboarded: true,
     createdAt: s.createdAt ?? today,
     raiox: { date: today, scores, priorities },
@@ -196,6 +203,57 @@ function normalizeDate(value) {
   return Number.isNaN(d.getTime()) ? null : dateKey(d);
 }
 
+/* ---------- humor ---------- */
+
+export function setMood(key, score, note) {
+  update((s) => {
+    const moods = { ...(s.moods ?? {}) };
+    if (!score) delete moods[key];
+    else moods[key] = { score, note: note ?? moods[key]?.note ?? "" };
+    return { ...s, moods };
+  });
+}
+
+/* ---------- desafios ---------- */
+
+export function joinChallenge(id) {
+  const today = dateKey();
+  update((s) =>
+    (s.challenges ?? []).some((c) => c.id === id && !c.endedAt)
+      ? s
+      : { ...s, challenges: [...(s.challenges ?? []).filter((c) => c.id !== id), { id, start: today }] },
+  );
+}
+
+export function leaveChallenge(id) {
+  update((s) => ({ ...s, challenges: (s.challenges ?? []).filter((c) => c.id !== id) }));
+}
+
+/* ---------- conteúdo ---------- */
+
+export function toggleTrailStep(slug, index) {
+  update((s) => {
+    const done = new Set(s.trails?.[slug] ?? []);
+    if (done.has(index)) done.delete(index);
+    else done.add(index);
+    return { ...s, trails: { ...(s.trails ?? {}), [slug]: [...done].sort((a, b) => a - b) } };
+  });
+}
+
+export function markArticleRead(slug) {
+  update((s) => ((s.readArticles ?? []).includes(slug) ? s : { ...s, readArticles: [...(s.readArticles ?? []), slug] }));
+}
+
+/* ---------- perfil e preferências ---------- */
+
+export function updateProfile(patch) {
+  update((s) => ({ ...s, profile: { ...(s.profile ?? {}), ...patch } }));
+}
+
+export function updateSettings(patch) {
+  update((s) => ({ ...s, settings: { ...EMPTY.settings, ...(s.settings ?? {}), ...patch } }));
+}
+
 export function resetRotina() {
   commit({ ...EMPTY });
 }
@@ -230,8 +288,18 @@ export function loadDemo() {
     return { id, label: c.label, dim: c.dim, intervalDays: c.intervalDays, category: c.category, lastDate };
   });
   const scores = { movimento: 3, saude: 2, mente: 2, sono: 3, alimentacao: 3, aparencia: 4, tempo: 2 };
+  const moods = {};
+  const moodSeq = [4, 3, 4, 2, 3, 4, 5, 3, 3, 4, 2, 2, 3, 4, 4, 5, 4, 3, 3, 4, 3, 4, 4, 3, 2, 3];
+  moodSeq.forEach((score, i) => {
+    moods[addDays(today, -(moodSeq.length - i))] = { score, note: "" };
+  });
   commit({
     ...EMPTY,
+    profile: { name: "Marina" },
+    moods,
+    challenges: [{ id: "agua7", start: addDays(today, -4) }],
+    trails: { "dormir-melhor": [0, 1, 2] },
+    readArticles: ["dentista-6-meses"],
     onboarded: true,
     createdAt: created,
     raiox: { date: today, scores, priorities: ["saude", "mente", "tempo"] },

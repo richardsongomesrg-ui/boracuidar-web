@@ -18,6 +18,7 @@ export default function RaioXFlow({ mode = "onboarding", initialScores = null, o
   const isRedo = mode === "redo";
   const [step, setStep] = useState(isRedo ? 1 : 0);
   const [scores, setScores] = useState(initialScores ?? {});
+  const [name, setName] = useState("");
   const [priorities, setPriorities] = useState(null);
   const [lastTimes, setLastTimes] = useState({});
   const [excluded, setExcluded] = useState({ habits: new Set(), cycles: new Set() });
@@ -66,6 +67,7 @@ export default function RaioXFlow({ mode = "onboarding", initialScores = null, o
 
   function finishOnboarding() {
     completeOnboarding({
+      name,
       scores,
       priorities: chosenPriorities,
       habits: plan.habits.filter((h) => !excluded.habits.has(h.id)),
@@ -110,6 +112,23 @@ export default function RaioXFlow({ mode = "onboarding", initialScores = null, o
             <li><Check size={16} /> Aviso quando chega a hora do corte, do dentista ou do checkup</li>
             <li><Check size={16} /> Agendamento em poucos toques quando você quiser marcar</li>
           </ul>
+          <form
+            className="raiox-name"
+            onSubmit={(event) => {
+              event.preventDefault();
+              setStep(1);
+            }}
+          >
+            <label htmlFor="raiox-name-input">Como a gente pode te chamar?</label>
+            <input
+              id="raiox-name-input"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder="Seu primeiro nome"
+              autoComplete="given-name"
+              maxLength={40}
+            />
+          </form>
           <div className="raiox-actions">
             <button type="button" className="cta-btn raiox-primary" onClick={() => setStep(1)}>
               Fazer meu Raio-X

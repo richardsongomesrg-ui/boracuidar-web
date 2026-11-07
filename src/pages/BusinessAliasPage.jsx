@@ -63,14 +63,14 @@ function BusinessAliasResolver({ alias }) {
 
   if (!error) {
     return (
-      <MarketplaceLayout fullWidth>
+      <MarketplaceLayout fullWidth hideTabBar>
         <p className="section-message">Carregando estabelecimento...</p>
       </MarketplaceLayout>
     );
   }
 
   return (
-    <MarketplaceLayout fullWidth>
+    <MarketplaceLayout fullWidth hideTabBar>
       <div className="section-message">
         <p className="error-text">{error}</p>
         <Link className="ghost-btn" to="/marketplace">Voltar ao marketplace</Link>

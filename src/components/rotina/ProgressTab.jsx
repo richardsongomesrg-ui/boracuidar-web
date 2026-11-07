@@ -7,6 +7,7 @@ import {
   cycleStatus,
   dateKey,
   formatDayShort,
+  parseKey,
   unlockedAchievements,
   weekScore,
   weekStart,
@@ -31,7 +32,7 @@ function WeeksChart({ state, today }) {
             <div className="weeks-track">
               <i className={score >= WEEK_GOAL ? "hit" : ""} style={{ height: `${Math.max(active ? 4 : 0, score * 100)}%` }} />
             </div>
-            <small>{w === weekStart(today) ? "Esta" : formatDayShort(w)}</small>
+            <small>{w === weekStart(today) ? "Esta" : `${parseKey(w).getDate()}/${parseKey(w).getMonth() + 1}`}</small>
           </div>
         );
       })}
@@ -39,7 +40,7 @@ function WeeksChart({ state, today }) {
   );
 }
 
-export default function ProgressTab({ state, onRedoRaiox }) {
+export default function ProgressTab({ state, onRedoRaiox, children }) {
   const today = dateKey();
   const [confirmReset, setConfirmReset] = useState(false);
   const streak = weekStreak(state, today);
@@ -100,6 +101,8 @@ export default function ProgressTab({ state, onRedoRaiox }) {
           </ul>
         </section>
       </div>
+
+      {children}
 
       <section className="rotina-panel">
         <div className="rotina-panel-head">

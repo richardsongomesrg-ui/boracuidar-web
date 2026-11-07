@@ -122,7 +122,7 @@ export default function SignupPage() {
     { title: "WhatsApp", label: "Qual o seu WhatsApp?", field: "whatsapp", placeholder: "(85) 99999-9999", type: "tel" },
   ];
 
-  return <MarketplaceLayout><section className="signup-page" aria-live="polite">
+  return <MarketplaceLayout hideTabBar><section className="signup-page" aria-live="polite">
     <div className="signup-intro"><Link className="signup-back" to="/marketplace"><ArrowLeft size={16} /> Voltar ao marketplace</Link><span className="signup-eyebrow">Para negócios</span><h1>Crie a conta do seu negócio.</h1><p>Depois do cadastro, entre pelo app Bora Cuidar para organizar agenda, serviços e clientes.</p></div>
     <div className="signup-panel">
       {!verified ? <><div className="signup-icon"><Mail size={23} /></div><h2>Confirme seu email</h2><p>Enviaremos um link seguro antes de liberar o restante do cadastro.</p><label htmlFor="signup-email">Email</label><input id="signup-email" type="email" value={email} disabled={busy} onChange={(event) => setEmail(event.target.value)} placeholder="você@exemplo.com" /><button className="cta-btn signup-primary" disabled={busy} onClick={() => openingLink ? completeEmailLink() : sendLink()}>{busy ? "Aguarde..." : openingLink ? "Continuar cadastro" : "Enviar link de confirmação"}</button>{linkSent ? <button className="signup-text-button" disabled={busy} onClick={sendLink}>Reenviar link</button> : null}</> : null}
